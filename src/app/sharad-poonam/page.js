@@ -1,0 +1,9 @@
+import EventYearNav from "../../components/EventYearNav";
+import EventAtAGlance from "../../components/EventAtAGlance";
+import PageHero from "../../components/PageHero";
+import SiteFooter from "../../components/SiteFooter";
+import SiteHeader from "../../components/SiteHeader";
+
+export default function SharadPoonamPage() {
+  return <main><SiteHeader /><PageHero eyebrow="SHARAD POONAM · ASHWIN FULL MOON" title={<>Moonlight, prasad<br />and <em>belonging.</em></>} copy="Sharad Poonam is the full-moon celebration of Ashwin, held after Navratri and Dussehra. At IIT Guwahati, it brings the community together for an evening of Gujarati tradition, shared food and moonlit warmth." image="/community/sharad-poonam/dudh-poha.jpg" /><EventYearNav eventName="Sharad Poonam" activeYear="2025" years={[{ year: 2025, href: "/sharad-poonam", status: "Archive in preparation" }, { year: 2026, status: "Coming soon · 25 October" }]} /><EventAtAGlance eyebrow="SHARAD POONAM" title={<>Sharad Poonam<br /><em>at a glance.</em></>} copy="An annual community evening held on the Ashwin full moon, after Navratri and Dussehra, with shared food, tradition and time together." facts={[{ label: "Timing", copy: "Ashwin full moon, after Navratri and Dussehra" }, { label: "Prasad", copy: "Dudh Poha and familiar Gujarati flavours" }, { label: "2026", copy: "Sharad Poonam falls on 25 October 2026; programme details will follow" }]} /><section className="story-section"><p className="eyebrow">A NEW TRADITION</p><h2>Gather under the <em>full moon.</em></h2><p className="lead-copy">The community is building this post-Navratri celebration with care. Event photographs will be added to the archive once they are curated and approved for publishing.</p><a className="button dark" href="/contact" data-curtain>Share a memory <span>↗</span></a></section><SiteFooter /></main>;
+}

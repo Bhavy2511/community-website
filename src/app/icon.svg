@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Gujarati Community IITG">
+  <rect width="512" height="512" rx="104" fill="#0b2d26"/>
+  <g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M90 168c35-22 74-32 114-26 18-29 54-46 89-38 45 9 80 46 88 91 32 23 45 65 29 102-14 34-47 58-84 61-35 3-70-14-88-43-31 13-69 9-95-13-31-26-44-67-33-106 3-11 9-20 16-29-14 3-25 9-36 18" stroke-width="18"/>
+    <path d="M192 189c18-19 44-29 71-27 33 2 63 21 79 50M211 249c10-11 23-17 39-17 20 0 37 10 48 26M282 267c-3 23-20 40-43 43M329 229c-10-7-23-10-35-8M188 293c12 3 25 2 36-4" stroke-width="15"/>
+    <path d="M121 383h270M151 383v-70h210v70M151 313h210M173 383v-44M221 383v-44M269 383v-44M317 383v-44" stroke-width="18"/>
+    <path d="M151 313l22-24h166l22 24" stroke-width="15"/>
+  </g>
+</svg>

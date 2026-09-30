@@ -1,0 +1,46 @@
+{
+  "name": "gujarati-community-iitg",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed": "node --env-file=.env.local scripts/seed.mjs",
+    "seed:core": "node --env-file=.env.local scripts/upsert-core-team.mjs",
+    "import:members": "node --env-file=.env.local scripts/import-approved-members.mjs",
+    "seed:news": "node --env-file=.env.local scripts/seed-news.mjs"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@fortawesome/free-brands-svg-icons": "^6.5.2",
+    "@fortawesome/free-regular-svg-icons": "^6.5.2",
+    "@fortawesome/free-solid-svg-icons": "^6.5.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
+    "@vercel/analytics": "^2.0.1",
+    "aos": "^2.3.4",
+    "framer-motion": "^11.3.4",
+    "gsap": "^3.12.5",
+    "mongoose": "^8.6.3",
+    "next": "14.2.4",
+    "qrcode": "^1.5.4",
+    "react": "^18",
+    "react-countup": "^6.5.3",
+    "react-dom": "^18",
+    "react-intersection-observer": "^9.13.0",
+    "react-router-dom": "^6.25.0",
+    "react-slick": "^0.30.2",
+    "react-spring": "^9.7.3",
+    "slick-carousel": "^1.8.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.11",
+    "@types/react": "18.3.3",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.4",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1"
+  }
+}

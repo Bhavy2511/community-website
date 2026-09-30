@@ -1,0 +1,38 @@
+name: Keep Chanda portal warm
+
+on:
+  schedule:
+    # GitHub Actions permits schedules as often as every five minutes.
+    - cron: "*/7 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: chanda-keep-warm
+  cancel-in-progress: true
+
+jobs:
+  warm-public-chanda-pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Request public Chanda pages
+        env:
+          SITE_URL: https://gujarati-community-iitg.vercel.app
+        run: |
+          set -euo pipefail
+          for path in / /chanda; do
+            curl \
+              --fail \
+              --location \
+              --retry 2 \
+              --retry-all-errors \
+              --silent \
+              --show-error \
+              --max-time 20 \
+              --user-agent "GarbaRaas-Chanda-Keep-Warm/1.0" \
+              "${SITE_URL}${path}" \
+              --output /dev/null
+          done

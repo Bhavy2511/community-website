@@ -1,0 +1,8 @@
+import Image from "next/image";
+import { garbaRaasCoreTeamNotes, garbaRaasCoreTeams, garbaRaasOriginStory } from "../data/garbaraas-core-teams";
+
+export default function GarbaRaasCoreTeam({ year }) {
+  const members = garbaRaasCoreTeams[year] || garbaRaasCoreTeams[2022];
+  const note = garbaRaasCoreTeamNotes[year];
+  return <section className="garba-core-team"><div className="section-heading"><div><p className="eyebrow">GARBARAAS {year} CORE TEAM</p><h2>The people who<br /><em>{year === 2022 ? "started it." : "carry it forward."}</em></h2></div>{year !== 2022 && !note && <p className="section-copy">Names and portraits will be updated as the year-wise team lists are shared.</p>}</div>{year === 2022 && <div className="garba-origin-story"><p className="eyebrow">HOW IT STARTED</p><p>{garbaRaasOriginStory}</p></div>}{note && <div className="garba-origin-story"><p className="eyebrow">THE 2023 CONTINUATION</p><p>{note}</p></div>}<div className="garba-core-grid">{members.map((member, index) => <article className={`garba-core-card${member.name === "Het Patel" ? " het-patel-card" : ""}${member.name === "Dhwani Doshi" ? " dhwani-doshi-card" : ""}`} key={`${year}-${member.name}-${index}`}>{member.image ? <div className="garba-core-image"><Image src={member.image} alt={`Portrait of ${member.name}`} fill sizes="(max-width: 680px) 100vw, 25vw" /></div> : <div className="garba-core-image empty" aria-label={`Portrait placeholder for ${member.name}`}><span>IMAGE<br />COMING SOON</span></div>}<div className="garba-core-card-copy"><h3>{member.name}</h3><p>{member.role}</p>{member.detail && <small>{member.detail}</small>}</div></article>)}</div></section>;
+}

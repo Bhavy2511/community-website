@@ -1,0 +1,413 @@
+{
+  "backupPath": "/Users/dhruvrpansuriya/Documents/Gujarati Community IITG/website/backups/kurta-orders-before-token-rotation-2026-09-29T21-22-57-710Z.csv",
+  "totalOrdersBackedUp": 67,
+  "rotated": [
+    {
+      "orderId": "6aba42ed440b027c086b5782",
+      "suffix": "086B5782",
+      "email": "shivansh.jain73@gmail.com",
+      "oldPickupCode": "KR-613B85C2B6",
+      "newPickupCode": "KR-3F18E62DC3"
+    },
+    {
+      "orderId": "6aba503937635a7dbcd1618e",
+      "suffix": "BCD1618E",
+      "email": "pranshukachhadiya13@gmail.com",
+      "oldPickupCode": "KR-4B9DCC13F0",
+      "newPickupCode": "KR-A423720A42"
+    },
+    {
+      "orderId": "6aba57b43ed8c5e6050cbe01",
+      "suffix": "050CBE01",
+      "email": "hardikkathekiya108@gmail.com",
+      "oldPickupCode": "KR-6B1E3DDCB9",
+      "newPickupCode": "KR-3C062924FA"
+    },
+    {
+      "orderId": "6aba5d7917a71626d3054dd9",
+      "suffix": "D3054DD9",
+      "email": "abhinavdeka711@gmail.com",
+      "oldPickupCode": "KR-F4DA6A3EFE",
+      "newPickupCode": "KR-A285DF04C4"
+    },
+    {
+      "orderId": "6aba6b38662a528421fc1eb2",
+      "suffix": "21FC1EB2",
+      "email": "sujal.utpure@iitg.ac.in",
+      "oldPickupCode": "KR-2D3363FBCE",
+      "newPickupCode": "KR-EA6AF3DB0D"
+    },
+    {
+      "orderId": "6aba6b65662a528421fc1ebc",
+      "suffix": "21FC1EBC",
+      "email": "deepanshu777patel@gmail.com",
+      "oldPickupCode": "KR-255D1E7381",
+      "newPickupCode": "KR-28DBC614DE"
+    },
+    {
+      "orderId": "6aba7d88c6dc3d79b4cd901b",
+      "suffix": "B4CD901B",
+      "email": "rohan.lokhande@iitg.ac.in",
+      "oldPickupCode": "KR-960EF0D1B8",
+      "newPickupCode": "KR-E7858465F5"
+    },
+    {
+      "orderId": "6aba8966b770d98f835f14c0",
+      "suffix": "835F14C0",
+      "email": "rathodaravind2007@gmail.com",
+      "oldPickupCode": "KR-915BA82F01",
+      "newPickupCode": "KR-FA47F685AB"
+    },
+    {
+      "orderId": "6aba9b879cf9f0c69c7834ba",
+      "suffix": "9C7834BA",
+      "email": "luvvya@iitg.ac.in",
+      "oldPickupCode": "KR-7E6D76216F",
+      "newPickupCode": "KR-618D957B60"
+    },
+    {
+      "orderId": "6aba9b8c9cf9f0c69c7834c4",
+      "suffix": "9C7834C4",
+      "email": "aditya.tapariya@iitg.ac.in",
+      "oldPickupCode": "KR-F11C4CB5B9",
+      "newPickupCode": "KR-8BC975615D"
+    },
+    {
+      "orderId": "6aba9e1367e26d3f6d03f183",
+      "suffix": "6D03F183",
+      "email": "premmaradana9903@gmail.com",
+      "oldPickupCode": "KR-3A767F59F3",
+      "newPickupCode": "KR-6C20CCE734"
+    },
+    {
+      "orderId": "6aba9f768828443499d66e47",
+      "suffix": "99D66E47",
+      "email": "arnab.bhattacharya@iitg.ac.in",
+      "oldPickupCode": "KR-137B1A7B15",
+      "newPickupCode": "KR-BFAAB00645"
+    },
+    {
+      "orderId": "6abaa4080c704191014cd9a2",
+      "suffix": "014CD9A2",
+      "email": "harshagarwal06219@gmail.com",
+      "oldPickupCode": "KR-1EC4FC5D5F",
+      "newPickupCode": "KR-DFBDEFF520"
+    },
+    {
+      "orderId": "6abaadd9dce769acc9581876",
+      "suffix": "C9581876",
+      "email": "aditya.y@iitg.ac.in",
+      "oldPickupCode": "KR-D8AB5CDD46",
+      "newPickupCode": "KR-EEEE0CE45B"
+    },
+    {
+      "orderId": "6abab1f63fed18792b5ecbcf",
+      "suffix": "2B5ECBCF",
+      "email": "rushilkadivar@gmail.com",
+      "oldPickupCode": "KR-07A05B92F1",
+      "newPickupCode": "KR-6C72857DAD"
+    },
+    {
+      "orderId": "6abb0ddde88282f80f755e98",
+      "suffix": "0F755E98",
+      "email": "charanjitsiva@gmail.com",
+      "oldPickupCode": "KR-2FEE560BEC",
+      "newPickupCode": "KR-80BF6FB521"
+    },
+    {
+      "orderId": "6abb43dbd366fdd0690d566b",
+      "suffix": "690D566B",
+      "email": "ktoni@iitg.ac.in",
+      "oldPickupCode": "KR-9A942FE48E",
+      "newPickupCode": "KR-C3BB061122"
+    },
+    {
+      "orderId": "6abb62808d56c988a41d9a7f",
+      "suffix": "A41D9A7F",
+      "email": "bhattrajil2@gmail.com",
+      "oldPickupCode": "KR-3C01A2EE1B",
+      "newPickupCode": "KR-0A95A7ABFE"
+    },
+    {
+      "orderId": "6abb751581f1a624f92305e4",
+      "suffix": "F92305E4",
+      "email": "apurbakumar176@gmail.com",
+      "oldPickupCode": "KR-3257464DD9",
+      "newPickupCode": "KR-9FF2F0BE74"
+    },
+    {
+      "orderId": "6abb7fb23a3da220c435f344",
+      "suffix": "C435F344",
+      "email": "eternals0811@gmail.com",
+      "oldPickupCode": "KR-62A3995E93",
+      "newPickupCode": "KR-0851EC34FA"
+    },
+    {
+      "orderId": "6abba47908de0a117fae6967",
+      "suffix": "7FAE6967",
+      "email": "pachingtangapachingtanga@gmail.com",
+      "oldPickupCode": "KR-B504D5353D",
+      "newPickupCode": "KR-628D45F2FB"
+    },
+    {
+      "orderId": "6abbb62b94f73fa84aa88348",
+      "suffix": "4AA88348",
+      "email": "pujak8002@iitg.ac.in",
+      "oldPickupCode": "KR-C4DB5AA693",
+      "newPickupCode": "KR-AE4C071B5E"
+    },
+    {
+      "orderId": "6abbd68edd81f7b693b4abc2",
+      "suffix": "93B4ABC2",
+      "email": "nagolu@iitg.ac.in",
+      "oldPickupCode": "KR-D4C952D3AE",
+      "newPickupCode": "KR-8C2C3F51EF"
+    },
+    {
+      "orderId": "6abbe377b0189e633d0ead02",
+      "suffix": "3D0EAD02",
+      "email": "g.bivash@iitg.ac.in",
+      "oldPickupCode": "KR-D36D44BE11",
+      "newPickupCode": "KR-657CF2E658"
+    },
+    {
+      "orderId": "6abc0b9ecd1f3d80c76b18ed",
+      "suffix": "C76B18ED",
+      "email": "cheela@iitg.ac.in",
+      "oldPickupCode": "KR-C55537E128",
+      "newPickupCode": "KR-B88B267AD2"
+    },
+    {
+      "orderId": "6abc0cd8cd1f3d80c76b18fd",
+      "suffix": "C76B18FD",
+      "email": "swastik@iitg.ac.in",
+      "oldPickupCode": "KR-132EA7075C",
+      "newPickupCode": "KR-76353331B3"
+    },
+    {
+      "orderId": "6abc15375eba20220db21bc4",
+      "suffix": "0DB21BC4",
+      "email": "kssatvik@gmail.com",
+      "oldPickupCode": "KR-D5AA116441",
+      "newPickupCode": "KR-B3C6A85F33"
+    }
+  ],
+  "tokens": [
+    {
+      "orderId": "6aba42ed440b027c086b5782",
+      "suffix": "086B5782",
+      "email": "shivansh.jain73@gmail.com",
+      "oldPickupCode": "KR-613B85C2B6",
+      "newPickupCode": "KR-3F18E62DC3",
+      "newToken": "uDiikIDMGhLxz8wizeAHun5JrfCRpjH5G0XT_GCK98Q"
+    },
+    {
+      "orderId": "6aba503937635a7dbcd1618e",
+      "suffix": "BCD1618E",
+      "email": "pranshukachhadiya13@gmail.com",
+      "oldPickupCode": "KR-4B9DCC13F0",
+      "newPickupCode": "KR-A423720A42",
+      "newToken": "9uq8Mei1xwBg1dA9M9gb3UBWroR64VfPVLDXU40eRjo"
+    },
+    {
+      "orderId": "6aba57b43ed8c5e6050cbe01",
+      "suffix": "050CBE01",
+      "email": "hardikkathekiya108@gmail.com",
+      "oldPickupCode": "KR-6B1E3DDCB9",
+      "newPickupCode": "KR-3C062924FA",
+      "newToken": "rqTToTmmrCsBBvnZO-dvEUxto_5zBjO27jWt_A1EA4o"
+    },
+    {
+      "orderId": "6aba5d7917a71626d3054dd9",
+      "suffix": "D3054DD9",
+      "email": "abhinavdeka711@gmail.com",
+      "oldPickupCode": "KR-F4DA6A3EFE",
+      "newPickupCode": "KR-A285DF04C4",
+      "newToken": "jXxlqNwkqbEx5XALtIHmgqU6Yr9YmRYBBE3dUkvbhJk"
+    },
+    {
+      "orderId": "6aba6b38662a528421fc1eb2",
+      "suffix": "21FC1EB2",
+      "email": "sujal.utpure@iitg.ac.in",
+      "oldPickupCode": "KR-2D3363FBCE",
+      "newPickupCode": "KR-EA6AF3DB0D",
+      "newToken": "jrl2iNuwRn3mO4ABxZho3TMosieBxD8zcWpyidLR4b0"
+    },
+    {
+      "orderId": "6aba6b65662a528421fc1ebc",
+      "suffix": "21FC1EBC",
+      "email": "deepanshu777patel@gmail.com",
+      "oldPickupCode": "KR-255D1E7381",
+      "newPickupCode": "KR-28DBC614DE",
+      "newToken": "EHGqgr_lhi07KgjX8RFlqcjwEv9iSLHVdB1WwwqJmWA"
+    },
+    {
+      "orderId": "6aba7d88c6dc3d79b4cd901b",
+      "suffix": "B4CD901B",
+      "email": "rohan.lokhande@iitg.ac.in",
+      "oldPickupCode": "KR-960EF0D1B8",
+      "newPickupCode": "KR-E7858465F5",
+      "newToken": "-LKChpa0W5LQAeiWQEjSJMjHNGSZJGrqhgRG8UTt78k"
+    },
+    {
+      "orderId": "6aba8966b770d98f835f14c0",
+      "suffix": "835F14C0",
+      "email": "rathodaravind2007@gmail.com",
+      "oldPickupCode": "KR-915BA82F01",
+      "newPickupCode": "KR-FA47F685AB",
+      "newToken": "eSd-hyAANsQHetye9hGvq1sciTl9BhxMnL8YIATvklY"
+    },
+    {
+      "orderId": "6aba9b879cf9f0c69c7834ba",
+      "suffix": "9C7834BA",
+      "email": "luvvya@iitg.ac.in",
+      "oldPickupCode": "KR-7E6D76216F",
+      "newPickupCode": "KR-618D957B60",
+      "newToken": "vuBZ_VA6nSH3C8TvPcJpxX6Fyk7EK5on9b7khQwFLK0"
+    },
+    {
+      "orderId": "6aba9b8c9cf9f0c69c7834c4",
+      "suffix": "9C7834C4",
+      "email": "aditya.tapariya@iitg.ac.in",
+      "oldPickupCode": "KR-F11C4CB5B9",
+      "newPickupCode": "KR-8BC975615D",
+      "newToken": "tx2qrb1RFX2GawKVxyWY4oF8e3uZgaKgA2FYFWTEhe4"
+    },
+    {
+      "orderId": "6aba9e1367e26d3f6d03f183",
+      "suffix": "6D03F183",
+      "email": "premmaradana9903@gmail.com",
+      "oldPickupCode": "KR-3A767F59F3",
+      "newPickupCode": "KR-6C20CCE734",
+      "newToken": "qs8LgVCFBastuG_ZGH7Deix_xrkC2uDb1HMKH6H8Xxc"
+    },
+    {
+      "orderId": "6aba9f768828443499d66e47",
+      "suffix": "99D66E47",
+      "email": "arnab.bhattacharya@iitg.ac.in",
+      "oldPickupCode": "KR-137B1A7B15",
+      "newPickupCode": "KR-BFAAB00645",
+      "newToken": "AGBaNP-CitLZSfQbdmd0y21MCpbY19QR-DE3eWkgZ0w"
+    },
+    {
+      "orderId": "6abaa4080c704191014cd9a2",
+      "suffix": "014CD9A2",
+      "email": "harshagarwal06219@gmail.com",
+      "oldPickupCode": "KR-1EC4FC5D5F",
+      "newPickupCode": "KR-DFBDEFF520",
+      "newToken": "_EUUseYJsoFpcKKLke-JAtDX055MbY7MzmGFeJM1kTQ"
+    },
+    {
+      "orderId": "6abaadd9dce769acc9581876",
+      "suffix": "C9581876",
+      "email": "aditya.y@iitg.ac.in",
+      "oldPickupCode": "KR-D8AB5CDD46",
+      "newPickupCode": "KR-EEEE0CE45B",
+      "newToken": "GXZH9NWOrZtD8MEKN3fozrZbJRrWPltxpjY7-I18XMA"
+    },
+    {
+      "orderId": "6abab1f63fed18792b5ecbcf",
+      "suffix": "2B5ECBCF",
+      "email": "rushilkadivar@gmail.com",
+      "oldPickupCode": "KR-07A05B92F1",
+      "newPickupCode": "KR-6C72857DAD",
+      "newToken": "PGEEuIWhuSpM96Aw7h6ByCcfXbXHC9xIQkrwhcEBNvg"
+    },
+    {
+      "orderId": "6abb0ddde88282f80f755e98",
+      "suffix": "0F755E98",
+      "email": "charanjitsiva@gmail.com",
+      "oldPickupCode": "KR-2FEE560BEC",
+      "newPickupCode": "KR-80BF6FB521",
+      "newToken": "HL91a36vM9IVVwQjnXu0j0DFAzBz1mdjMUuBiGt25YU"
+    },
+    {
+      "orderId": "6abb43dbd366fdd0690d566b",
+      "suffix": "690D566B",
+      "email": "ktoni@iitg.ac.in",
+      "oldPickupCode": "KR-9A942FE48E",
+      "newPickupCode": "KR-C3BB061122",
+      "newToken": "etxJD0RCl-Q_kRs2YhmkAHNWUjNSzz81zsDGB63ZRsY"
+    },
+    {
+      "orderId": "6abb62808d56c988a41d9a7f",
+      "suffix": "A41D9A7F",
+      "email": "bhattrajil2@gmail.com",
+      "oldPickupCode": "KR-3C01A2EE1B",
+      "newPickupCode": "KR-0A95A7ABFE",
+      "newToken": "fl_btHerD65xXAOMsalin8LSkbWbGMaEBnw4bnKvmGo"
+    },
+    {
+      "orderId": "6abb751581f1a624f92305e4",
+      "suffix": "F92305E4",
+      "email": "apurbakumar176@gmail.com",
+      "oldPickupCode": "KR-3257464DD9",
+      "newPickupCode": "KR-9FF2F0BE74",
+      "newToken": "J5hSgDSWnL8RbOHH6xLEjD0Wmout-RqiWPYnc-S1QCE"
+    },
+    {
+      "orderId": "6abb7fb23a3da220c435f344",
+      "suffix": "C435F344",
+      "email": "eternals0811@gmail.com",
+      "oldPickupCode": "KR-62A3995E93",
+      "newPickupCode": "KR-0851EC34FA",
+      "newToken": "kyRJtrmTecCQpP8JEcyx1_PW4ZPiFdZVOMUasrEEbto"
+    },
+    {
+      "orderId": "6abba47908de0a117fae6967",
+      "suffix": "7FAE6967",
+      "email": "pachingtangapachingtanga@gmail.com",
+      "oldPickupCode": "KR-B504D5353D",
+      "newPickupCode": "KR-628D45F2FB",
+      "newToken": "kWa6aoF0llziz9oGwci45T_zT5PztSB9GvAVkNgHhPE"
+    },
+    {
+      "orderId": "6abbb62b94f73fa84aa88348",
+      "suffix": "4AA88348",
+      "email": "pujak8002@iitg.ac.in",
+      "oldPickupCode": "KR-C4DB5AA693",
+      "newPickupCode": "KR-AE4C071B5E",
+      "newToken": "VRY86ZzTNX2kNtVqUw5ybAnY5JP9UQwkxWLCV9vt4fk"
+    },
+    {
+      "orderId": "6abbd68edd81f7b693b4abc2",
+      "suffix": "93B4ABC2",
+      "email": "nagolu@iitg.ac.in",
+      "oldPickupCode": "KR-D4C952D3AE",
+      "newPickupCode": "KR-8C2C3F51EF",
+      "newToken": "_ohJLID-MXa_ayJpmgUrdCw38ZmfrOgaUyyrazzm0JE"
+    },
+    {
+      "orderId": "6abbe377b0189e633d0ead02",
+      "suffix": "3D0EAD02",
+      "email": "g.bivash@iitg.ac.in",
+      "oldPickupCode": "KR-D36D44BE11",
+      "newPickupCode": "KR-657CF2E658",
+      "newToken": "WLa4AnKCTBSIKeCqdF3cEHozIo_XmnytV3n9IjOhPyc"
+    },
+    {
+      "orderId": "6abc0b9ecd1f3d80c76b18ed",
+      "suffix": "C76B18ED",
+      "email": "cheela@iitg.ac.in",
+      "oldPickupCode": "KR-C55537E128",
+      "newPickupCode": "KR-B88B267AD2",
+      "newToken": "0WRZBef8_A9ZFNs5wVCYmsFJPvoy_7SJXs5N3aFLiAk"
+    },
+    {
+      "orderId": "6abc0cd8cd1f3d80c76b18fd",
+      "suffix": "C76B18FD",
+      "email": "swastik@iitg.ac.in",
+      "oldPickupCode": "KR-132EA7075C",
+      "newPickupCode": "KR-76353331B3",
+      "newToken": "X72VXuW7e7khM5_x_US3NIYhNprI6PP-l_CE32PoJlY"
+    },
+    {
+      "orderId": "6abc15375eba20220db21bc4",
+      "suffix": "0DB21BC4",
+      "email": "kssatvik@gmail.com",
+      "oldPickupCode": "KR-D5AA116441",
+      "newPickupCode": "KR-B3C6A85F33",
+      "newToken": "I2_5GaFwSDdWuMeCwTtOv_EVDYynCD35YF_2yAASwXs"
+    }
+  ]
+}

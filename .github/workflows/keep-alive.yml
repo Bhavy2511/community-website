@@ -1,0 +1,61 @@
+name: Keep Website Alive
+
+on:
+  schedule:
+    # Runs every 7 minutes to keep ALL serverless functions and MongoDB warm
+    - cron: '*/7 * * * *'
+  workflow_dispatch: # Allows you to run it manually from the GitHub Actions tab
+
+env:
+  BASE: https://gujarati-community-iitg.vercel.app
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Warm up all pages
+        run: |
+          PAGES=(
+            "/"
+            "/contact"
+            "/directory"
+            "/events"
+            "/farewell"
+            "/food-guide"
+            "/future-events"
+            "/garba-raas"
+            "/garbaraas"
+            "/garbaraas/2022"
+            "/garbaraas/2023"
+            "/garbaraas/2024"
+            "/garbaraas/2025"
+            "/garbaraas/2026"
+            "/initiatives"
+            "/kurta-order"
+            "/koti-order"
+            "/magazine"
+            "/mentorship"
+            "/news"
+            "/nutan-varsh-milan"
+            "/sharad-poonam"
+            "/vision"
+            "/archive"
+            "/admin"
+          )
+
+          echo "🔥 Warming up ${#PAGES[@]} pages..."
+          SUCCESS=0
+          FAIL=0
+
+          for page in "${PAGES[@]}"; do
+            if curl -sSf -o /dev/null -m 15 "${BASE}${page}" 2>/dev/null; then
+              echo "✅ ${page}"
+              SUCCESS=$((SUCCESS + 1))
+            else
+              echo "⚠️  ${page} (may require auth or is disabled)"
+              FAIL=$((FAIL + 1))
+            fi
+          done
+
+          echo ""
+          echo "Done! ✅ ${SUCCESS} warmed, ⚠️ ${FAIL} skipped"
