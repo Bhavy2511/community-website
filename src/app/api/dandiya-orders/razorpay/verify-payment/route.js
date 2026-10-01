@@ -41,7 +41,7 @@ WhatsApp Number: ${order.phone}
 Email: ${order.email}
 Dandiya Quantity: ${order.quantity} pair(s)
 Deposit Paid: ₹${order.totalAmount} (${paymentLabel})
-Payment Ref / Txn ID: ${order.razorpayPaymentId || order.paymentReference || "Verified Online"}
+Payment Ref / Txn ID: ${order.razorpayPaymentId || order.paymentReference}
 Order Date: ${orderedAt}
 
 COLLECTION INSTRUCTIONS
@@ -69,7 +69,7 @@ https://gujarati-community-iitg.vercel.app/`;
           <strong>WhatsApp:</strong> ${escapeEmailHtml(order.phone)}<br>
           <strong>Dandiya Quantity:</strong> ${order.quantity} pair(s)<br>
           <strong>Total Deposit:</strong> ₹${order.totalAmount} (${paymentLabel})<br>
-          <strong>Transaction ID:</strong> <span style="font-family: monospace;">${escapeEmailHtml(order.razorpayPaymentId || order.paymentReference || "VERIFIED_ONLINE")}</span><br>
+          <strong>Transaction ID:</strong> <span style="font-family: monospace;">${escapeEmailHtml(order.razorpayPaymentId || order.paymentReference)}</span><br>
           <strong>Date:</strong> ${orderedAt}
         </p>
       </div>
@@ -122,7 +122,6 @@ export async function POST(request) {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      mode,
       name: rawName,
       phone: rawPhone,
       email: rawEmail,
@@ -142,10 +141,19 @@ export async function POST(request) {
       return respond({ error: `Quantity must be between 1 and ${maxPairs} pairs.` }, { status: 400 });
     }
 
+    // STRICT VERIFICATION: Razorpay payment ID and order ID are REQUIRED
+    if (!razorpay_payment_id || !razorpay_order_id) {
+      return respond({ error: "Payment verification failed. No valid transaction ID returned." }, { status: 400 });
+    }
+
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
-    // Verify Razorpay HMAC signature if credentials are set
-    if (keySecret && razorpay_order_id && razorpay_payment_id && razorpay_signature) {
+    // HMAC Signature verification
+    if (keySecret) {
+      if (!razorpay_signature) {
+        return respond({ error: "Payment verification failed. Missing transaction signature." }, { status: 400 });
+      }
+
       const generatedSignature = crypto
         .createHmac("sha256", keySecret)
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -155,8 +163,6 @@ export async function POST(request) {
         console.error("Razorpay signature mismatch!", { generatedSignature, razorpay_signature });
         return respond({ error: "Payment verification failed. Invalid transaction signature." }, { status: 400 });
       }
-    } else if (mode !== "simulation" && !razorpay_payment_id && !razorpay_order_id) {
-      return respond({ error: "Payment was cancelled or details missing." }, { status: 400 });
     }
 
     const totalAmount = quantity * depositPerPair;
@@ -171,9 +177,9 @@ export async function POST(request) {
       totalAmount,
       paymentMethod: "online",
       paymentStatus: "paid",
-      paymentReference: razorpay_payment_id || `PAY_ONLINE_${Date.now()}`,
-      razorpayOrderId: razorpay_order_id || "",
-      razorpayPaymentId: razorpay_payment_id || "",
+      paymentReference: razorpay_payment_id,
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
       razorpaySignature: razorpay_signature || "",
       pickupCode: pickup.code,
       pickupTokenHash: pickup.tokenHash,
@@ -203,7 +209,7 @@ export async function POST(request) {
 
     // Format direct WhatsApp text message link
     const waText = encodeURIComponent(
-      `*GarbaRaas IITG - Dandiya Collection Pass*\n\nHi ${name},\nYour online payment is verified & your Dandiya collection pass is ready!\n\n*Pass Code:* ${pickup.code}\n*Pairs:* ${quantity} (${totalAmount} INR deposit paid online)\n*Payment:* Online via UPI (Paid & Confirmed)\n*Txn ID:* ${razorpay_payment_id || orderData.paymentReference}\n\nPlease check your email (${email}) for your QR Code pass, or show this code at the counter.\n\nThank you!`
+      `*GarbaRaas IITG - Dandiya Collection Pass*\n\nHi ${name},\nYour online payment is verified & your Dandiya collection pass is ready!\n\n*Pass Code:* ${pickup.code}\n*Pairs:* ${quantity} (${totalAmount} INR deposit paid online)\n*Payment:* Online via UPI (Paid & Confirmed)\n*Txn ID:* ${razorpay_payment_id}\n\nPlease check your email (${email}) for your QR Code pass, or show this code at the counter.\n\nThank you!`
     );
     const whatsappUrl = `https://wa.me/91${phone}?text=${waText}`;
 
@@ -224,7 +230,7 @@ export async function POST(request) {
         paymentMethod: "online",
         paymentStatus: "paid",
         pickupCode: pickup.code,
-        paymentReference: razorpay_payment_id || orderData.paymentReference,
+        paymentReference: razorpay_payment_id,
       },
     });
   } catch (err) {

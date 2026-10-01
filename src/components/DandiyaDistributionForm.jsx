@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 const depositPerPair = 50; // ₹50 per pair deposit
 const maxPairsPerOrder = 10;
@@ -42,11 +43,9 @@ export default function DandiyaDistributionForm() {
   const [status, setStatus] = useState("");
   const [completedPass, setCompletedPass] = useState(null);
 
-  // Online Payment States
+  // Online Payment Verification State
   const [verifyingStatus, setVerifyingStatus] = useState("");
-  const [showUpiModal, setShowUpiModal] = useState(false);
-  const [selectedApp, setSelectedApp] = useState("");
-  const [isVerifyingOnline, setIsVerifyingOnline] = useState(false);
+  const [copiedUpi, setCopiedUpi] = useState(false);
 
   const totalAmount = details.quantity * depositPerPair;
 
@@ -127,12 +126,11 @@ export default function DandiyaDistributionForm() {
     }
   }
 
-  async function startOnlinePayment(appName = "Google Pay") {
+  async function startOnlinePayment() {
     setIsSubmitting(true);
     setError("");
     setStatus("");
-    setSelectedApp(appName);
-    setVerifyingStatus("Connecting to payment gateway...");
+    setVerifyingStatus("Initializing secure payment gateway...");
 
     try {
       // 1. Create Razorpay order on backend
@@ -152,11 +150,10 @@ export default function DandiyaDistributionForm() {
         throw new Error(createData.error || "Could not initialize online payment gateway.");
       }
 
-      // Check if Razorpay script is ready
+      // Load Razorpay JS SDK
       const scriptReady = await loadRazorpayScript();
 
       if (scriptReady && window.Razorpay && createData.mode === "razorpay") {
-        setShowUpiModal(false);
         const options = {
           key: createData.keyId,
           amount: createData.amount,
@@ -173,9 +170,8 @@ export default function DandiyaDistributionForm() {
             color: "#d36d31",
           },
           handler: async function (response) {
-            // AUTOMATIC VERIFICATION ON PAYMENT SUCCESS — No user confirmation needed!
-            setIsVerifyingOnline(true);
-            setVerifyingStatus("Payment received! Verifying transaction with bank and generating QR pass...");
+            // AUTOMATIC VERIFICATION ON GENUINE PAYMENT SUCCESS ONLY
+            setVerifyingStatus("Payment received! Verifying transaction signature with bank and generating QR pass...");
             try {
               const verifyRes = await fetch("/api/dandiya-orders/razorpay/verify-payment", {
                 method: "POST",
@@ -197,22 +193,20 @@ export default function DandiyaDistributionForm() {
               }
 
               setCompletedPass(verifyData);
-              setStep(3); // Auto transition to Pass Confirmation Step!
+              setStep(3); // Transition to Pass Confirmation Step!
             } catch (err) {
-              console.error("Auto verification error:", err);
-              setError(err.message || "Could not verify payment. Please try again.");
+              console.error("Payment verification error:", err);
+              setError(err.message || "Could not verify payment. Please contact support if debited.");
             } finally {
               setIsSubmitting(false);
-              setIsVerifyingOnline(false);
               setVerifyingStatus("");
             }
           },
           modal: {
             ondismiss: function () {
               setIsSubmitting(false);
-              setIsVerifyingOnline(false);
               setVerifyingStatus("");
-              setError("❌ Payment was cancelled or not completed. Your Dandiya deposit request was not placed.");
+              setError("❌ Payment was cancelled or not completed. No collection pass was generated.");
             },
           },
         };
@@ -220,14 +214,15 @@ export default function DandiyaDistributionForm() {
         const rzp = new window.Razorpay(options);
         rzp.on("payment.failed", function (response) {
           setIsSubmitting(false);
-          setIsVerifyingOnline(false);
           setVerifyingStatus("");
           setError(`❌ Payment failed: ${response.error?.description || "Transaction declined"}. Please try again.`);
         });
         rzp.open();
       } else {
-        // Fallback / Automated verification mode if Razorpay API keys are in simulation mode
-        launchAutomatedUpiFlow(appName, createData);
+        // If Razorpay API key is missing on live server
+        setIsSubmitting(false);
+        setVerifyingStatus("");
+        setError("⚠️ Payment Gateway integration key (RAZORPAY_KEY_ID / SECRET) is pending configuration in Vercel settings. Please use the UPI QR code below or pay cash at the counter.");
       }
     } catch (err) {
       console.error("Payment launch error:", err);
@@ -237,59 +232,10 @@ export default function DandiyaDistributionForm() {
     }
   }
 
-  async function launchAutomatedUpiFlow(appName, createData) {
-    setShowUpiModal(true);
-    setIsVerifyingOnline(true);
-    setVerifyingStatus(`Redirecting to ${appName}... Automatically verifying payment with bank.`);
-
-    const upiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(`Dandiya deposit - ${details.quantity} pairs`)}`;
-
-    // Deep link redirect to app
-    window.location.href = upiUrl;
-
-    // Automatic status check with backend after redirect
-    setTimeout(async () => {
-      setVerifyingStatus("Verifying payment completion automatically...");
-      try {
-        const verifyRes = await fetch("/api/dandiya-orders/razorpay/verify-payment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            razorpay_order_id: createData.orderId,
-            razorpay_payment_id: `PAY_AUTO_${Date.now()}`,
-            mode: "simulation",
-            name: details.name.trim(),
-            phone: details.phone.trim(),
-            email: details.email.trim(),
-            quantity: details.quantity,
-          }),
-        });
-
-        const verifyData = await verifyRes.json();
-        if (!verifyRes.ok || !verifyData.ok) {
-          throw new Error(verifyData.error || "Payment verification failed.");
-        }
-
-        setShowUpiModal(false);
-        setCompletedPass(verifyData);
-        setStep(3); // Auto transition to Pass Confirmation Step!
-      } catch (err) {
-        setShowUpiModal(false);
-        setError("❌ Payment was cancelled or not completed. Please try again.");
-      } finally {
-        setIsSubmitting(false);
-        setIsVerifyingOnline(false);
-        setVerifyingStatus("");
-      }
-    }, 4500);
-  }
-
-  function cancelOnlinePayment() {
-    setShowUpiModal(false);
-    setIsSubmitting(false);
-    setIsVerifyingOnline(false);
-    setVerifyingStatus("");
-    setError("❌ Payment was cancelled. Your Dandiya deposit request was not placed.");
+  function handleCopyUpi() {
+    navigator.clipboard.writeText(UPI_ID);
+    setCopiedUpi(true);
+    setTimeout(() => setCopiedUpi(false), 2500);
   }
 
   function resetForm() {
@@ -299,12 +245,8 @@ export default function DandiyaDistributionForm() {
     setError("");
     setStatus("");
     setCompletedPass(null);
-    setShowUpiModal(false);
-    setIsVerifyingOnline(false);
     setVerifyingStatus("");
   }
-
-  const baseUpiUrl = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(`Dandiya deposit - ${details.quantity} pairs`)}`;
 
   return (
     <main className="kurta-order-page dandiya-order-page">
@@ -481,7 +423,7 @@ export default function DandiyaDistributionForm() {
                     <span className="dandiya-payment-option-icon">₹</span>
                     <div>
                       <b>Cash at counter</b>
-                      <p>Pay cash at the collection counter. A QR code pass will be sent to your email &amp; WhatsApp.</p>
+                      <p>Pay cash at the collection counter. A QR code pass will be generated for counter collection.</p>
                     </div>
                   </div>
                 </label>
@@ -501,17 +443,79 @@ export default function DandiyaDistributionForm() {
                     <span className="dandiya-payment-option-icon">📱</span>
                     <div>
                       <b>Pay online via UPI</b>
-                      <p>Google Pay, PhonePe, Paytm, Amazon Pay or any UPI app. Instant automatic verification &amp; QR generation.</p>
+                      <p>Scan UPI QR Code using Google Pay, PhonePe, Paytm, Amazon Pay or pay via automated gateway.</p>
                     </div>
                   </div>
                 </label>
               </div>
 
+              {/* UPI Payment QR Code & Details Card */}
               {paymentMethod === "online" && (
-                <div className="dandiya-upi-note">
-                  <p className="eyebrow" style={{ marginBottom: ".4rem" }}>AMOUNT TO PAY</p>
-                  <strong className="dandiya-upi-amount">{formatAmount(totalAmount)}</strong>
-                  <p>Automatic payment verification enabled. Once payment is completed in Google Pay / UPI, your QR code pass will be generated automatically.</p>
+                <div className="dandiya-upi-card" style={{
+                  marginTop: "1.5rem",
+                  padding: "1.5rem",
+                  background: "#fffcf8",
+                  border: "1px dashed #d36d31",
+                  borderRadius: "12px",
+                  textAlign: "center"
+                }}>
+                  <p className="eyebrow" style={{ color: "#d36d31", marginBottom: ".4rem" }}>
+                    OFFICIAL UPI PAYMENT QR CODE
+                  </p>
+                  <p style={{ fontSize: "14px", color: "#193630", marginBottom: "1rem" }}>
+                    Scan with <strong>Google Pay / PhonePe / Paytm / BHIM / Amazon Pay</strong> to pay <strong>{formatAmount(totalAmount)}</strong>
+                  </p>
+
+                  <div className="dandiya-qr-image-wrapper" style={{
+                    display: "inline-block",
+                    padding: "12px",
+                    background: "#ffffff",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
+                    border: "1px solid #e2d9c8",
+                    marginBottom: "1rem"
+                  }}>
+                    <Image
+                      src="/dandiya-payment-qr/QR_Bhavy.jpeg"
+                      alt="UPI Payment QR Code"
+                      width={220}
+                      height={220}
+                      style={{ borderRadius: "8px", objectFit: "contain" }}
+                      priority
+                    />
+                  </div>
+
+                  <div className="dandiya-upi-id-box" style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    background: "#f8f3ea",
+                    padding: "10px 16px",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    color: "#193630",
+                    margin: "0 auto 1rem auto",
+                    maxWidth: "340px"
+                  }}>
+                    <span>UPI ID: <strong>{UPI_ID}</strong></span>
+                    <button
+                      type="button"
+                      onClick={handleCopyUpi}
+                      style={{
+                        background: "#d36d31",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "4px 10px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        cursor: "pointer"
+                      }}
+                    >
+                      {copiedUpi ? "✓ Copied!" : "Copy"}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -536,7 +540,7 @@ export default function DandiyaDistributionForm() {
                 {isSubmitting
                   ? verifyingStatus || "Processing..."
                   : paymentMethod === "online"
-                  ? `Pay ${formatAmount(totalAmount)} via Google Pay / UPI`
+                  ? `Pay ${formatAmount(totalAmount)} via Online Gateway`
                   : paymentMethod === "cash"
                   ? "Confirm cash payment"
                   : "Select payment method"} <span>↗</span>
@@ -546,59 +550,6 @@ export default function DandiyaDistributionForm() {
             {error && <p className="kurta-form-error" role="alert">{error}</p>}
             {status && <p className="kurta-form-success" role="status">{status}</p>}
           </section>
-        )}
-
-        {/* Automated Online Payment Verification Overlay Modal */}
-        {showUpiModal && (
-          <div className="dandiya-upi-modal-overlay">
-            <div className="dandiya-upi-modal-card">
-              <button
-                type="button"
-                className="dandiya-upi-modal-close"
-                onClick={cancelOnlinePayment}
-                aria-label="Cancel UPI payment"
-              >
-                ✕
-              </button>
-
-              <p className="eyebrow">AUTOMATED PAYMENT VERIFICATION</p>
-              <h2>Completing <em>Payment...</em></h2>
-              <p className="dandiya-upi-modal-desc">
-                Paying <strong>{formatAmount(totalAmount)}</strong> deposit via <strong>{selectedApp || "Google Pay / UPI"}</strong>.
-              </p>
-
-              <div className="dandiya-upi-confirm-box">
-                <div className="dandiya-auto-loader-wrap" style={{ textAlign: "center", padding: "24px 12px" }}>
-                  <div className="dandiya-spinner" style={{
-                    width: "48px",
-                    height: "48px",
-                    border: "4px solid #f3ece1",
-                    borderTop: "4px solid #d36d31",
-                    borderRadius: "50%",
-                    animation: "spin 1s linear infinite",
-                    margin: "0 auto 16px auto",
-                  }} />
-                  <p style={{ fontSize: "15px", fontWeight: "bold", color: "#193630", margin: "0 0 8px" }}>
-                    {verifyingStatus || "Checking bank payment status automatically..."}
-                  </p>
-                  <p style={{ fontSize: "13px", color: "#617d74", margin: 0 }}>
-                    Please complete payment in your UPI app. Do not refresh or close this window.
-                  </p>
-                </div>
-
-                <div className="dandiya-upi-modal-actions" style={{ marginTop: "16px" }}>
-                  <button
-                    type="button"
-                    className="kurta-secondary-button cancel-btn"
-                    onClick={cancelOnlinePayment}
-                    style={{ width: "100%" }}
-                  >
-                    ✕ Cancel Payment
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
         )}
 
         {/* Step 3 — Collection Pass & Confirmation */}
@@ -699,14 +650,6 @@ export default function DandiyaDistributionForm() {
           </section>
         )}
       </div>
-
-      {/* CSS Animation Keyframes for Spinner */}
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
 
       {/* Decorative art strip, matching the kurta/koti pages */}
       <div className="kurta-order-art-strip" aria-hidden="true" />
