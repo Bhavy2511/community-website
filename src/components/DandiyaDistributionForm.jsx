@@ -71,48 +71,16 @@ export default function DandiyaDistributionForm() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
-  function handleQuantityChange(val) {
-    if (val === "") {
-      setDetails((prev) => ({ ...prev, quantity: "" }));
-      return;
-    }
-    const num = parseInt(val, 10);
-    if (isNaN(num)) return;
-    setDetails((prev) => ({ ...prev, quantity: num }));
-  }
-
-  function handleQuantityBlur() {
-    let q = parseInt(details.quantity, 10);
-    if (isNaN(q) || q < 1) q = 1;
-    if (q > maxPairsPerOrder) q = maxPairsPerOrder;
-    setDetails((prev) => ({ ...prev, quantity: q }));
-  }
-
-  function incrementQuantity() {
-    setDetails((prev) => {
-      const current = parseInt(prev.quantity, 10) || 1;
-      return { ...prev, quantity: Math.min(maxPairsPerOrder, current + 1) };
-    });
-  }
-
-  function decrementQuantity() {
-    setDetails((prev) => {
-      const current = parseInt(prev.quantity, 10) || 1;
-      return { ...prev, quantity: Math.max(1, current - 1) };
-    });
-  }
-
   function goToPayment(event) {
     event.preventDefault();
     setError("");
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(details.email);
-    const q = parseInt(details.quantity, 10);
+    const q = numericQuantity;
 
     if (
       !details.name.trim() ||
       !/^\d{10}$/.test(details.phone) ||
-      !emailValid ||
-      isNaN(q)
+      !emailValid
     ) {
       setError("Please complete all fields with a valid 10-digit phone number and email address.");
       return;
@@ -462,112 +430,66 @@ export default function DandiyaDistributionForm() {
                   />
                 </label>
 
+                {/* Mobile-Friendly Touch Quantity Selector Options */}
                 <div className="dandiya-quantity-field" style={{ marginTop: "1rem" }}>
                   <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold", fontSize: "14px", color: "#193630" }}>
-                    Quantity of Dandiya pairs (Max {maxPairsPerOrder} pairs) *
+                    Select Quantity of Dandiya Pairs *
                   </label>
 
-                  {/* Quantity Stepper Control with - and + buttons */}
+                  {/* Native Mobile Dropdown for Perfect Accessibility */}
+                  <select
+                    value={numericQuantity}
+                    onChange={(e) => setDetails({ ...details, quantity: Number(e.target.value) })}
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      fontSize: "15px",
+                      fontWeight: "600",
+                      borderRadius: "8px",
+                      border: "1.5px solid #d36d31",
+                      background: "#fffcf8",
+                      color: "#193630",
+                      marginBottom: "12px",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((qty) => (
+                      <option key={qty} value={qty}>
+                        {qty} Pair{qty !== 1 ? "s" : ""} — ₹{qty * depositPerPair} deposit
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Visual Quantity Selection Cards for Quick Mobile Tapping */}
                   <div style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px",
-                    background: "#f8f3ea",
-                    padding: "8px 12px",
-                    borderRadius: "10px",
-                    border: "1px solid #e2d9c8",
-                    maxWidth: "280px"
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
+                    gap: "8px",
+                    marginTop: "8px"
                   }}>
-                    <button
-                      type="button"
-                      onClick={decrementQuantity}
-                      disabled={numericQuantity <= 1}
-                      style={{
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "8px",
-                        border: "1px solid #c7b9a5",
-                        background: numericQuantity <= 1 ? "#ebe3d5" : "#ffffff",
-                        color: numericQuantity <= 1 ? "#aaa" : "#d36d31",
-                        fontSize: "20px",
-                        fontWeight: "bold",
-                        cursor: numericQuantity <= 1 ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                      }}
-                      aria-label="Decrease quantity"
-                    >
-                      −
-                    </button>
-
-                    <input
-                      type="number"
-                      min={1}
-                      max={maxPairsPerOrder}
-                      value={details.quantity}
-                      onChange={(e) => handleQuantityChange(e.target.value)}
-                      onBlur={handleQuantityBlur}
-                      style={{
-                        width: "60px",
-                        height: "38px",
-                        textAlign: "center",
-                        fontSize: "18px",
-                        fontWeight: "bold",
-                        border: "1px solid #c7b9a5",
-                        borderRadius: "6px",
-                        color: "#193630",
-                        background: "#ffffff"
-                      }}
-                    />
-
-                    <button
-                      type="button"
-                      onClick={incrementQuantity}
-                      disabled={numericQuantity >= maxPairsPerOrder}
-                      style={{
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "8px",
-                        border: "1px solid #c7b9a5",
-                        background: numericQuantity >= maxPairsPerOrder ? "#ebe3d5" : "#ffffff",
-                        color: numericQuantity >= maxPairsPerOrder ? "#aaa" : "#d36d31",
-                        fontSize: "20px",
-                        fontWeight: "bold",
-                        cursor: numericQuantity >= maxPairsPerOrder ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                      }}
-                      aria-label="Increase quantity"
-                    >
-                      +
-                    </button>
-
-                    <span style={{ fontSize: "14px", color: "#566e66", fontWeight: "600" }}>
-                      pair{numericQuantity !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-
-                  {/* Quick selection pills */}
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
-                    {[1, 2, 3, 4, 5, 10].map((num) => (
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((qty) => (
                       <button
-                        key={num}
+                        key={qty}
                         type="button"
-                        onClick={() => setDetails((prev) => ({ ...prev, quantity: num }))}
+                        onClick={() => setDetails({ ...details, quantity: qty })}
                         style={{
-                          padding: "5px 12px",
-                          borderRadius: "16px",
-                          fontSize: "13px",
-                          border: numericQuantity === num ? "2px solid #d36d31" : "1px solid #d0c4b2",
-                          background: numericQuantity === num ? "#fff0e6" : "#ffffff",
-                          color: numericQuantity === num ? "#d36d31" : "#425e55",
-                          fontWeight: numericQuantity === num ? "bold" : "normal",
-                          cursor: "pointer"
+                          padding: "10px 8px",
+                          borderRadius: "8px",
+                          textAlign: "center",
+                          border: numericQuantity === qty ? "2px solid #d36d31" : "1px solid #d0c4b2",
+                          background: numericQuantity === qty ? "#fff0e6" : "#ffffff",
+                          color: numericQuantity === qty ? "#d36d31" : "#425e55",
+                          fontWeight: numericQuantity === qty ? "bold" : "normal",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease"
                         }}
                       >
-                        {num} Pair{num !== 1 ? "s" : ""}
+                        <span style={{ display: "block", fontSize: "15px", fontWeight: "bold" }}>
+                          {qty} Pair{qty !== 1 ? "s" : ""}
+                        </span>
+                        <small style={{ fontSize: "11px", opacity: 0.85 }}>
+                          ₹{qty * depositPerPair}
+                        </small>
                       </button>
                     ))}
                   </div>
@@ -575,8 +497,8 @@ export default function DandiyaDistributionForm() {
               </div>
 
               {/* Live deposit preview */}
-              <div className="dandiya-deposit-preview">
-                <span>Deposit for {numericQuantity} pair{numericQuantity !== 1 ? "s" : ""}</span>
+              <div className="dandiya-deposit-preview" style={{ marginTop: "1.5rem" }}>
+                <span>Selected Deposit for {numericQuantity} pair{numericQuantity !== 1 ? "s" : ""}</span>
                 <strong>{formatAmount(totalAmount)}</strong>
               </div>
             </section>
