@@ -166,59 +166,98 @@ export async function POST(request) {
     }
 
     const totalAmount = quantity * depositPerPair;
-    const pickup = createPickupToken("DN");
 
-    const orderData = {
+    let savedOrder = null;
+    let pickupCode = "";
+    let pickupToken = "";
+
+    if (hasMongoConfiguration()) {
+      try {
+        await connectMongo();
+        // Check if a pending order already exists for this razorpay_order_id
+        savedOrder = await DandiyaOrder.findOne({ razorpayOrderId: razorpay_order_id });
+
+        if (savedOrder) {
+          savedOrder.paymentStatus = "paid";
+          savedOrder.paymentReference = razorpay_payment_id;
+          savedOrder.razorpayPaymentId = razorpay_payment_id;
+          savedOrder.razorpaySignature = razorpay_signature || "";
+          await savedOrder.save();
+          pickupCode = savedOrder.pickupCode;
+          pickupToken = savedOrder.pickupCode;
+        }
+      } catch (dbErr) {
+        console.error("Failed to update pending Dandiya order in MongoDB", dbErr);
+      }
+    }
+
+    if (!savedOrder) {
+      const pickup = createPickupToken("DN");
+      pickupCode = pickup.code;
+      pickupToken = pickup.token;
+
+      const orderData = {
+        name,
+        phone,
+        email,
+        quantity,
+        unitDeposit: depositPerPair,
+        totalAmount,
+        paymentMethod: "online",
+        paymentStatus: "paid",
+        paymentReference: razorpay_payment_id,
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: razorpay_payment_id,
+        razorpaySignature: razorpay_signature || "",
+        pickupCode: pickup.code,
+        pickupTokenHash: pickup.tokenHash,
+        distributionStatus: "pending",
+        orderedAt: new Date(),
+      };
+
+      if (hasMongoConfiguration()) {
+        try {
+          await connectMongo();
+          savedOrder = await DandiyaOrder.create(orderData);
+        } catch (dbErr) {
+          console.error("Failed to create paid Dandiya order in MongoDB", dbErr);
+        }
+      }
+    }
+
+    const orderDataForInvoice = savedOrder || {
       name,
       phone,
       email,
       quantity,
-      unitDeposit: depositPerPair,
       totalAmount,
       paymentMethod: "online",
-      paymentStatus: "paid",
-      paymentReference: razorpay_payment_id,
-      razorpayOrderId: razorpay_order_id,
+      pickupCode,
       razorpayPaymentId: razorpay_payment_id,
-      razorpaySignature: razorpay_signature || "",
-      pickupCode: pickup.code,
-      pickupTokenHash: pickup.tokenHash,
-      distributionStatus: "pending",
-      orderedAt: new Date(),
     };
 
-    const pickupQr = await createPickupQr(pickup.token, "dandiya");
-
-    let savedOrder = null;
-    if (hasMongoConfiguration()) {
-      try {
-        await connectMongo();
-        savedOrder = await DandiyaOrder.create(orderData);
-      } catch (dbErr) {
-        console.error("Failed to persist paid Dandiya order in MongoDB", dbErr);
-      }
-    }
+    const pickupQr = await createPickupQr(pickupToken || pickupCode, "dandiya");
 
     // Send confirmation email
     let emailSent = false;
     try {
-      emailSent = await sendDandiyaInvoice(orderData, pickupQr);
+      emailSent = await sendDandiyaInvoice(orderDataForInvoice, pickupQr);
     } catch (emailErr) {
       console.error("Online payment invoice email error:", emailErr);
     }
 
     // Format direct WhatsApp text message link
     const waText = encodeURIComponent(
-      `*GarbaRaas IITG - Dandiya Collection Pass*\n\nHi ${name},\nYour online payment is verified & your Dandiya collection pass is ready!\n\n*Pass Code:* ${pickup.code}\n*Pairs:* ${quantity} (${totalAmount} INR deposit paid online)\n*Payment:* Online via UPI (Paid & Confirmed)\n*Txn ID:* ${razorpay_payment_id}\n\nPlease check your email (${email}) for your QR Code pass, or show this code at the counter.\n\nThank you!`
+      `*GarbaRaas IITG - Dandiya Collection Pass*\n\nHi ${name},\nYour online payment is verified & your Dandiya collection pass is ready!\n\n*Pass Code:* ${pickupCode}\n*Pairs:* ${quantity} (${totalAmount} INR deposit paid online)\n*Payment:* Online via UPI (Paid & Confirmed)\n*Txn ID:* ${razorpay_payment_id}\n\nPlease check your email (${email}) for your QR Code pass, or show this code at the counter.\n\nThank you!`
     );
     const whatsappUrl = `https://wa.me/91${phone}?text=${waText}`;
 
     return respond({
       ok: true,
       orderId: savedOrder ? savedOrder._id.toString() : `DAN-${Date.now()}`,
-      pickupCode: pickup.code,
+      pickupCode: pickupCode,
       qrDataUrl: pickupQr.qrDataUrl,
-      token: pickup.token,
+      token: pickupToken || pickupCode,
       emailSent,
       whatsappUrl,
       orderDetails: {
@@ -229,7 +268,7 @@ export async function POST(request) {
         totalAmount,
         paymentMethod: "online",
         paymentStatus: "paid",
-        pickupCode: pickup.code,
+        pickupCode: pickupCode,
         paymentReference: razorpay_payment_id,
       },
     });

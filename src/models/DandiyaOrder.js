@@ -31,7 +31,7 @@ const DandiyaOrderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid"],
+      enum: ["pending", "pending_payment", "paid", "cancelled", "failed"],
       default: "pending",
       index: true,
     },

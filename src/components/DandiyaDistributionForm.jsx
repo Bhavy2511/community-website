@@ -43,16 +43,26 @@ export default function DandiyaDistributionForm() {
   const [status, setStatus] = useState("");
   const [completedPass, setCompletedPass] = useState(null);
 
-  // Online Payment States
+  // Amazon-Style Polling & Payment Verification Modal States
+  const [showAmazonModal, setShowAmazonModal] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState("");
   const [verifyingStatus, setVerifyingStatus] = useState("");
+  const [pollCount, setPollCount] = useState(0);
   const [copiedUpi, setCopiedUpi] = useState(false);
-  const [utrNumber, setUtrNumber] = useState("");
 
   const totalAmount = details.quantity * depositPerPair;
+  const pollingTimerRef = useRef(null);
 
   // Preload Razorpay checkout script
   useEffect(() => {
     loadRazorpayScript();
+  }, []);
+
+  // Cleanup polling timer on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
+    };
   }, []);
 
   // Scroll to top on step change
@@ -89,7 +99,7 @@ export default function DandiyaDistributionForm() {
     setStatus("");
 
     if (paymentMethod === "online") {
-      startOnlineGatewayPayment();
+      startAmazonStyleOnlinePayment();
       return;
     }
 
@@ -129,14 +139,14 @@ export default function DandiyaDistributionForm() {
     }
   }
 
-  async function startOnlineGatewayPayment() {
+  async function startAmazonStyleOnlinePayment() {
     setIsSubmitting(true);
     setError("");
     setStatus("");
-    setVerifyingStatus("Initializing secure payment gateway...");
+    setVerifyingStatus("Creating pending order & initializing payment...");
 
     try {
-      // Create Razorpay order on backend
+      // 1. Create Pending Payment Order on Server
       const createRes = await fetch("/api/dandiya-orders/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -153,9 +163,16 @@ export default function DandiyaDistributionForm() {
         throw new Error(createData.error || "Could not initialize online payment gateway.");
       }
 
-      // Load Razorpay JS SDK
-      const scriptReady = await loadRazorpayScript();
+      const orderId = createData.orderId;
+      setPendingOrderId(orderId);
+      setShowAmazonModal(true);
+      setVerifyingStatus("Waiting for bank payment confirmation...");
 
+      // 2. Start Amazon-Style Automated Polling Loop (every 2.5 seconds)
+      startStatusPolling(orderId);
+
+      // 3. Trigger Razorpay Checkout or launch UPI App Intent
+      const scriptReady = await loadRazorpayScript();
       if (scriptReady && window.Razorpay && createData.mode === "razorpay") {
         const options = {
           key: createData.keyId,
@@ -173,8 +190,7 @@ export default function DandiyaDistributionForm() {
             color: "#d36d31",
           },
           handler: async function (response) {
-            // AUTOMATIC VERIFICATION ON GENUINE PAYMENT SUCCESS ONLY
-            setVerifyingStatus("Payment received! Verifying transaction signature with bank and generating QR pass...");
+            setVerifyingStatus("Payment received! Verifying HMAC signature with bank...");
             try {
               const verifyRes = await fetch("/api/dandiya-orders/razorpay/verify-payment", {
                 method: "POST",
@@ -195,44 +211,106 @@ export default function DandiyaDistributionForm() {
                 throw new Error(verifyData.error || "Payment verification failed.");
               }
 
+              stopStatusPolling();
+              setShowAmazonModal(false);
               setCompletedPass(verifyData);
-              setStep(3); // Transition to Pass Confirmation Step!
+              setStep(3); // Amazon Success Transition!
             } catch (err) {
-              console.error("Payment verification error:", err);
-              setError(err.message || "Could not verify payment. Please contact support if debited.");
+              console.error("Verification error:", err);
+              setError(err.message || "Payment verification failed.");
             } finally {
               setIsSubmitting(false);
-              setVerifyingStatus("");
             }
           },
           modal: {
             ondismiss: function () {
-              setIsSubmitting(false);
-              setVerifyingStatus("");
-              setError("❌ Payment was cancelled or not completed. No collection pass was generated.");
+              cancelAmazonPayment(orderId, "Payment was cancelled or closed.");
             },
           },
         };
 
         const rzp = new window.Razorpay(options);
         rzp.on("payment.failed", function (response) {
-          setIsSubmitting(false);
-          setVerifyingStatus("");
-          setError(`❌ Payment failed: ${response.error?.description || "Transaction declined"}. Please try again.`);
+          cancelAmazonPayment(orderId, `Payment failed: ${response.error?.description || "Transaction declined"}`);
         });
         rzp.open();
-      } else {
-        // If Razorpay API key is missing, prompt user to use UPI QR code or submit UTR
-        setIsSubmitting(false);
-        setVerifyingStatus("");
-        setError("Please scan the UPI QR Code below with Google Pay / PhonePe / Paytm and enter your UPI Transaction Ref / UTR number below to submit.");
+      } else if (createData.upiIntentUrl) {
+        // Direct mobile app launcher
+        window.location.href = createData.upiIntentUrl;
       }
     } catch (err) {
-      console.error("Payment launch error:", err);
-      setError(err.message || "Failed to launch online payment gateway.");
+      console.error("Online payment error:", err);
+      setError(err.message || "Unable to start online payment.");
       setIsSubmitting(false);
-      setVerifyingStatus("");
+      setShowAmazonModal(false);
     }
+  }
+
+  function startStatusPolling(orderId) {
+    if (pollingTimerRef.current) clearInterval(pollingTimerRef.current);
+    let attempts = 0;
+
+    pollingTimerRef.current = setInterval(async () => {
+      attempts += 1;
+      setPollCount(attempts);
+
+      try {
+        const res = await fetch(`/api/dandiya-orders/status?orderId=${encodeURIComponent(orderId)}`);
+        const data = await res.json();
+
+        if (res.ok && data.ok && data.status === "paid") {
+          stopStatusPolling();
+          setShowAmazonModal(false);
+          setCompletedPass(data);
+          setStep(3); // Move to Pass Confirmation!
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (data.status === "cancelled" || data.status === "failed") {
+          stopStatusPolling();
+          setShowAmazonModal(false);
+          setError("❌ Payment was cancelled or declined by your bank.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Timeout after 60 attempts (~150 seconds)
+        if (attempts >= 60) {
+          cancelAmazonPayment(orderId, "Payment verification timed out. If money was debited, please contact our team.");
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    }, 2500);
+  }
+
+  function stopStatusPolling() {
+    if (pollingTimerRef.current) {
+      clearInterval(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
+  }
+
+  async function cancelAmazonPayment(orderId, reasonMessage) {
+    stopStatusPolling();
+    setShowAmazonModal(false);
+    setIsSubmitting(false);
+    setVerifyingStatus("");
+
+    if (orderId) {
+      try {
+        await fetch("/api/dandiya-orders/status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId, action: "cancel" }),
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    setError(reasonMessage || "❌ Payment was cancelled. Your Dandiya deposit request was not placed.");
   }
 
   function handleCopyUpi() {
@@ -242,14 +320,16 @@ export default function DandiyaDistributionForm() {
   }
 
   function resetForm() {
+    stopStatusPolling();
     setStep(1);
     setDetails({ name: "", phone: "", email: "", quantity: 1 });
     setPaymentMethod("");
     setError("");
     setStatus("");
     setCompletedPass(null);
+    setShowAmazonModal(false);
     setVerifyingStatus("");
-    setUtrNumber("");
+    setPendingOrderId("");
   }
 
   return (
@@ -426,8 +506,8 @@ export default function DandiyaDistributionForm() {
                     </span>
                     <span className="dandiya-payment-option-icon">📱</span>
                     <div>
-                      <b>Pay online via UPI / GPay</b>
-                      <p>Scan official UPI QR Code or pay via instant online payment gateway.</p>
+                      <b>Pay online via UPI / GPay (Amazon-Style Automated)</b>
+                      <p>Google Pay, PhonePe, Paytm, Amazon Pay or scan official UPI QR Code. Bank auto-verifies.</p>
                     </div>
                   </div>
                 </label>
@@ -544,7 +624,7 @@ export default function DandiyaDistributionForm() {
                 {isSubmitting
                   ? verifyingStatus || "Processing..."
                   : paymentMethod === "online"
-                  ? `Pay ${formatAmount(totalAmount)} via Gateway`
+                  ? `Pay ${formatAmount(totalAmount)} via Online Gateway`
                   : paymentMethod === "cash"
                   ? "Register for Cash Payment"
                   : "Select Payment Method"} <span>↗</span>
@@ -554,6 +634,67 @@ export default function DandiyaDistributionForm() {
             {error && <p className="kurta-form-error" role="alert">{error}</p>}
             {status && <p className="kurta-form-success" role="status">{status}</p>}
           </section>
+        )}
+
+        {/* Amazon-Style Automated Payment Status Checking Overlay */}
+        {showAmazonModal && (
+          <div className="dandiya-upi-modal-overlay">
+            <div className="dandiya-upi-modal-card">
+              <button
+                type="button"
+                className="dandiya-upi-modal-close"
+                onClick={() => cancelAmazonPayment(pendingOrderId, "Payment attempt cancelled.")}
+                aria-label="Cancel payment attempt"
+              >
+                ✕
+              </button>
+
+              <p className="eyebrow" style={{ color: "#d36d31" }}>AUTOMATED PAYMENT STATUS CHECK</p>
+              <h2>Checking <em>Payment...</em></h2>
+              <p className="dandiya-upi-modal-desc">
+                Paying <strong>{formatAmount(totalAmount)}</strong> for {details.quantity} pair{details.quantity !== 1 ? "s" : ""} of Dandiya.
+              </p>
+
+              <div className="dandiya-upi-confirm-box" style={{ textAlign: "center", padding: "20px 10px" }}>
+                <div style={{
+                  width: "52px",
+                  height: "52px",
+                  border: "4px solid #f3ece1",
+                  borderTop: "4px solid #d36d31",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                  margin: "0 auto 16px auto",
+                }} />
+
+                <p style={{ fontSize: "15px", fontWeight: "bold", color: "#193630", margin: "0 0 6px" }}>
+                  {verifyingStatus || "Waiting for bank transaction status..."}
+                </p>
+                <p style={{ fontSize: "12px", color: "#617d74", margin: "0 0 16px" }}>
+                  Auto-checking with bank (Check #{pollCount}). Do not refresh or close this page.
+                </p>
+
+                <div style={{
+                  background: "#f8f3ea",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  color: "#566e66",
+                  marginBottom: "16px"
+                }}>
+                  Order Ref: <span style={{ fontFamily: "monospace", fontWeight: "bold", color: "#d36d31" }}>{pendingOrderId}</span>
+                </div>
+
+                <button
+                  type="button"
+                  className="kurta-secondary-button cancel-btn"
+                  onClick={() => cancelAmazonPayment(pendingOrderId, "Payment attempt was cancelled by user.")}
+                  style={{ width: "100%" }}
+                >
+                  ✕ Cancel Payment Attempt
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Step 3 — Collection Pass & Confirmation */}

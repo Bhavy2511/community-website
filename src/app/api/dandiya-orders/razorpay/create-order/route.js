@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
+import connectMongo, { hasMongoConfiguration } from "../../../../../lib/mongodb";
+import DandiyaOrder from "../../../../../models/DandiyaOrder";
+import { createPickupToken } from "../../../../../lib/kurta-pickup";
 
 export const runtime = "nodejs";
 
@@ -44,6 +47,9 @@ export async function POST(request) {
     const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
+    let razorpayOrderId = `rzp_ord_${Date.now()}`;
+    let isLiveRazorpay = false;
+
     if (keyId && keySecret) {
       try {
         const razorpay = new Razorpay({
@@ -65,30 +71,54 @@ export async function POST(request) {
         };
 
         const razorpayOrder = await razorpay.orders.create(orderOptions);
-
-        return respond({
-          ok: true,
-          mode: "razorpay",
-          orderId: razorpayOrder.id,
-          amount: razorpayOrder.amount,
-          currency: razorpayOrder.currency,
-          keyId: keyId,
-        });
+        razorpayOrderId = razorpayOrder.id;
+        isLiveRazorpay = true;
       } catch (rzpErr) {
         console.error("Razorpay API Error creating order:", rzpErr);
-        // Fallback to seamless order if API call fails
       }
     }
 
-    // Seamless Gateway / Demo mode when Razorpay credentials are not yet configured in env
-    const simOrderId = `order_sim_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    // Register pending order in MongoDB (Amazon-style Pending Payment registration)
+    const pickup = createPickupToken("DN");
+    let pendingDbId = "";
+
+    if (hasMongoConfiguration()) {
+      try {
+        await connectMongo();
+        const pendingOrder = await DandiyaOrder.create({
+          name,
+          phone,
+          email,
+          quantity,
+          unitDeposit: depositPerPair,
+          totalAmount,
+          paymentMethod: "online",
+          paymentStatus: "pending_payment",
+          paymentReference: "",
+          razorpayOrderId: razorpayOrderId,
+          pickupCode: pickup.code,
+          pickupTokenHash: pickup.tokenHash,
+          distributionStatus: "pending",
+          orderedAt: new Date(),
+        });
+        pendingDbId = pendingOrder._id.toString();
+      } catch (dbErr) {
+        console.error("Failed to create pending order in MongoDB:", dbErr);
+      }
+    }
+
+    const upiIntentUrl = `upi://pay?pa=gujaraticommunityiitg@upi&pn=Gujarati%20Community%20IITG&am=${totalAmount}&cu=INR&tr=${encodeURIComponent(razorpayOrderId)}&tn=${encodeURIComponent(`Dandiya deposit - ${quantity} pairs`)}`;
+
     return respond({
       ok: true,
-      mode: "simulation",
-      orderId: simOrderId,
+      mode: isLiveRazorpay ? "razorpay" : "upi_intent",
+      orderId: razorpayOrderId,
+      dbOrderId: pendingDbId,
       amount: amountInPaise,
+      totalAmount,
       currency: "INR",
       keyId: keyId || "rzp_test_demo",
+      upiIntentUrl,
     });
   } catch (err) {
     console.error("Create Razorpay Order Error:", err);
