@@ -50,7 +50,8 @@ export default function DandiyaDistributionForm() {
   const [pollCount, setPollCount] = useState(0);
   const [copiedUpi, setCopiedUpi] = useState(false);
 
-  const totalAmount = details.quantity * depositPerPair;
+  const numericQuantity = typeof details.quantity === "number" ? details.quantity : parseInt(details.quantity, 10) || 1;
+  const totalAmount = numericQuantity * depositPerPair;
   const pollingTimerRef = useRef(null);
 
   // Preload Razorpay checkout script
@@ -70,20 +71,53 @@ export default function DandiyaDistributionForm() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
+  function handleQuantityChange(val) {
+    if (val === "") {
+      setDetails((prev) => ({ ...prev, quantity: "" }));
+      return;
+    }
+    const num = parseInt(val, 10);
+    if (isNaN(num)) return;
+    setDetails((prev) => ({ ...prev, quantity: num }));
+  }
+
+  function handleQuantityBlur() {
+    let q = parseInt(details.quantity, 10);
+    if (isNaN(q) || q < 1) q = 1;
+    if (q > maxPairsPerOrder) q = maxPairsPerOrder;
+    setDetails((prev) => ({ ...prev, quantity: q }));
+  }
+
+  function incrementQuantity() {
+    setDetails((prev) => {
+      const current = parseInt(prev.quantity, 10) || 1;
+      return { ...prev, quantity: Math.min(maxPairsPerOrder, current + 1) };
+    });
+  }
+
+  function decrementQuantity() {
+    setDetails((prev) => {
+      const current = parseInt(prev.quantity, 10) || 1;
+      return { ...prev, quantity: Math.max(1, current - 1) };
+    });
+  }
+
   function goToPayment(event) {
     event.preventDefault();
     setError("");
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(details.email);
+    const q = parseInt(details.quantity, 10);
+
     if (
       !details.name.trim() ||
       !/^\d{10}$/.test(details.phone) ||
       !emailValid ||
-      !details.quantity
+      isNaN(q)
     ) {
       setError("Please complete all fields with a valid 10-digit phone number and email address.");
       return;
     }
-    if (details.quantity < 1 || details.quantity > maxPairsPerOrder) {
+    if (q < 1 || q > maxPairsPerOrder) {
       setError(`You can borrow between 1 and ${maxPairsPerOrder} pairs.`);
       return;
     }
@@ -119,7 +153,7 @@ export default function DandiyaDistributionForm() {
           name: details.name.trim(),
           phone: details.phone.trim(),
           email: details.email.trim(),
-          quantity: details.quantity,
+          quantity: numericQuantity,
           paymentMethod: "cash",
         }),
       });
@@ -154,7 +188,7 @@ export default function DandiyaDistributionForm() {
           name: details.name.trim(),
           phone: details.phone.trim(),
           email: details.email.trim(),
-          quantity: details.quantity,
+          quantity: numericQuantity,
         }),
       });
 
@@ -179,7 +213,7 @@ export default function DandiyaDistributionForm() {
           amount: createData.amount,
           currency: createData.currency,
           name: "GarbaRaas IITG - Dandiya Deposit",
-          description: `Deposit for ${details.quantity} pair${details.quantity !== 1 ? "s" : ""} of Dandiya sticks`,
+          description: `Deposit for ${numericQuantity} pair${numericQuantity !== 1 ? "s" : ""} of Dandiya sticks`,
           order_id: createData.orderId,
           prefill: {
             name: details.name.trim(),
@@ -202,7 +236,7 @@ export default function DandiyaDistributionForm() {
                   name: details.name.trim(),
                   phone: details.phone.trim(),
                   email: details.email.trim(),
-                  quantity: details.quantity,
+                  quantity: numericQuantity,
                 }),
               });
 
@@ -428,23 +462,121 @@ export default function DandiyaDistributionForm() {
                   />
                 </label>
 
-                <label>
-                  Quantity of Dandiya pairs *
-                  <input
-                    required
-                    type="number"
-                    min={1}
-                    max={maxPairsPerOrder}
-                    value={details.quantity}
-                    onChange={(e) => setDetails({ ...details, quantity: Math.max(1, Math.min(maxPairsPerOrder, parseInt(e.target.value) || 1)) })}
-                    placeholder={`1 – ${maxPairsPerOrder}`}
-                  />
-                </label>
+                <div className="dandiya-quantity-field" style={{ marginTop: "1rem" }}>
+                  <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold", fontSize: "14px", color: "#193630" }}>
+                    Quantity of Dandiya pairs (Max {maxPairsPerOrder} pairs) *
+                  </label>
+
+                  {/* Quantity Stepper Control with - and + buttons */}
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "12px",
+                    background: "#f8f3ea",
+                    padding: "8px 12px",
+                    borderRadius: "10px",
+                    border: "1px solid #e2d9c8",
+                    maxWidth: "280px"
+                  }}>
+                    <button
+                      type="button"
+                      onClick={decrementQuantity}
+                      disabled={numericQuantity <= 1}
+                      style={{
+                        width: "38px",
+                        height: "38px",
+                        borderRadius: "8px",
+                        border: "1px solid #c7b9a5",
+                        background: numericQuantity <= 1 ? "#ebe3d5" : "#ffffff",
+                        color: numericQuantity <= 1 ? "#aaa" : "#d36d31",
+                        fontSize: "20px",
+                        fontWeight: "bold",
+                        cursor: numericQuantity <= 1 ? "not-allowed" : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}
+                      aria-label="Decrease quantity"
+                    >
+                      −
+                    </button>
+
+                    <input
+                      type="number"
+                      min={1}
+                      max={maxPairsPerOrder}
+                      value={details.quantity}
+                      onChange={(e) => handleQuantityChange(e.target.value)}
+                      onBlur={handleQuantityBlur}
+                      style={{
+                        width: "60px",
+                        height: "38px",
+                        textAlign: "center",
+                        fontSize: "18px",
+                        fontWeight: "bold",
+                        border: "1px solid #c7b9a5",
+                        borderRadius: "6px",
+                        color: "#193630",
+                        background: "#ffffff"
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={incrementQuantity}
+                      disabled={numericQuantity >= maxPairsPerOrder}
+                      style={{
+                        width: "38px",
+                        height: "38px",
+                        borderRadius: "8px",
+                        border: "1px solid #c7b9a5",
+                        background: numericQuantity >= maxPairsPerOrder ? "#ebe3d5" : "#ffffff",
+                        color: numericQuantity >= maxPairsPerOrder ? "#aaa" : "#d36d31",
+                        fontSize: "20px",
+                        fontWeight: "bold",
+                        cursor: numericQuantity >= maxPairsPerOrder ? "not-allowed" : "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center"
+                      }}
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+
+                    <span style={{ fontSize: "14px", color: "#566e66", fontWeight: "600" }}>
+                      pair{numericQuantity !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  {/* Quick selection pills */}
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "10px" }}>
+                    {[1, 2, 3, 4, 5, 10].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setDetails((prev) => ({ ...prev, quantity: num }))}
+                        style={{
+                          padding: "5px 12px",
+                          borderRadius: "16px",
+                          fontSize: "13px",
+                          border: numericQuantity === num ? "2px solid #d36d31" : "1px solid #d0c4b2",
+                          background: numericQuantity === num ? "#fff0e6" : "#ffffff",
+                          color: numericQuantity === num ? "#d36d31" : "#425e55",
+                          fontWeight: numericQuantity === num ? "bold" : "normal",
+                          cursor: "pointer"
+                        }}
+                      >
+                        {num} Pair{num !== 1 ? "s" : ""}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Live deposit preview */}
               <div className="dandiya-deposit-preview">
-                <span>Deposit for {details.quantity} pair{details.quantity !== 1 ? "s" : ""}</span>
+                <span>Deposit for {numericQuantity} pair{numericQuantity !== 1 ? "s" : ""}</span>
                 <strong>{formatAmount(totalAmount)}</strong>
               </div>
             </section>
@@ -470,13 +602,13 @@ export default function DandiyaDistributionForm() {
               <div className="kurta-summary-list">
                 <div>
                   <span>Dandiya pairs</span>
-                  <b>{details.quantity} × {formatAmount(depositPerPair)}</b>
+                  <b>{numericQuantity} × {formatAmount(depositPerPair)}</b>
                 </div>
               </div>
 
               <div className="kurta-total">
                 <span>Total pairs</span>
-                <strong>{details.quantity}</strong>
+                <strong>{numericQuantity}</strong>
                 <span>Deposit payable</span>
                 <strong>{formatAmount(totalAmount)}</strong>
               </div>
@@ -652,7 +784,7 @@ export default function DandiyaDistributionForm() {
               <p className="eyebrow" style={{ color: "#d36d31" }}>AUTOMATED PAYMENT STATUS CHECK</p>
               <h2>Checking <em>Payment...</em></h2>
               <p className="dandiya-upi-modal-desc">
-                Paying <strong>{formatAmount(totalAmount)}</strong> for {details.quantity} pair{details.quantity !== 1 ? "s" : ""} of Dandiya.
+                Paying <strong>{formatAmount(totalAmount)}</strong> for {numericQuantity} pair{numericQuantity !== 1 ? "s" : ""} of Dandiya.
               </p>
 
               <div className="dandiya-upi-confirm-box" style={{ textAlign: "center", padding: "20px 10px" }}>
