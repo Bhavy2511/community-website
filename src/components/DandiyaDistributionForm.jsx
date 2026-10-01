@@ -37,15 +37,16 @@ export default function DandiyaDistributionForm() {
     email: "",
     quantity: 1,
   });
-  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentMethod, setPaymentMethod] = useState(""); // Default empty so user explicitly chooses!
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [completedPass, setCompletedPass] = useState(null);
 
-  // Online Payment Verification State
+  // Online Payment States
   const [verifyingStatus, setVerifyingStatus] = useState("");
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [utrNumber, setUtrNumber] = useState("");
 
   const totalAmount = details.quantity * depositPerPair;
 
@@ -69,7 +70,7 @@ export default function DandiyaDistributionForm() {
       !emailValid ||
       !details.quantity
     ) {
-      setError("Please complete all fields with a valid phone number and email address.");
+      setError("Please complete all fields with a valid 10-digit phone number and email address.");
       return;
     }
     if (details.quantity < 1 || details.quantity > maxPairsPerOrder) {
@@ -81,19 +82,21 @@ export default function DandiyaDistributionForm() {
 
   function handlePaymentSubmit() {
     if (!paymentMethod) {
-      setError("Please select a payment method.");
+      setError("Please select how you want to pay (Online UPI or Cash at counter).");
       return;
     }
     setError("");
     setStatus("");
 
     if (paymentMethod === "online") {
-      startOnlinePayment();
+      startOnlineGatewayPayment();
       return;
     }
 
-    // Cash payment flow
-    processCashOrder();
+    if (paymentMethod === "cash") {
+      processCashOrder();
+      return;
+    }
   }
 
   async function processCashOrder() {
@@ -126,14 +129,14 @@ export default function DandiyaDistributionForm() {
     }
   }
 
-  async function startOnlinePayment() {
+  async function startOnlineGatewayPayment() {
     setIsSubmitting(true);
     setError("");
     setStatus("");
     setVerifyingStatus("Initializing secure payment gateway...");
 
     try {
-      // 1. Create Razorpay order on backend
+      // Create Razorpay order on backend
       const createRes = await fetch("/api/dandiya-orders/razorpay/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -219,14 +222,14 @@ export default function DandiyaDistributionForm() {
         });
         rzp.open();
       } else {
-        // If Razorpay API key is missing on live server
+        // If Razorpay API key is missing, prompt user to use UPI QR code or submit UTR
         setIsSubmitting(false);
         setVerifyingStatus("");
-        setError("⚠️ Payment Gateway integration key (RAZORPAY_KEY_ID / SECRET) is pending configuration in Vercel settings. Please use the UPI QR code below or pay cash at the counter.");
+        setError("Please scan the UPI QR Code below with Google Pay / PhonePe / Paytm and enter your UPI Transaction Ref / UTR number below to submit.");
       }
     } catch (err) {
       console.error("Payment launch error:", err);
-      setError(err.message || "Failed to launch online payment.");
+      setError(err.message || "Failed to launch online payment gateway.");
       setIsSubmitting(false);
       setVerifyingStatus("");
     }
@@ -241,11 +244,12 @@ export default function DandiyaDistributionForm() {
   function resetForm() {
     setStep(1);
     setDetails({ name: "", phone: "", email: "", quantity: 1 });
-    setPaymentMethod("cash");
+    setPaymentMethod("");
     setError("");
     setStatus("");
     setCompletedPass(null);
     setVerifyingStatus("");
+    setUtrNumber("");
   }
 
   return (
@@ -405,29 +409,9 @@ export default function DandiyaDistributionForm() {
             {/* Payment panel */}
             <div className="kurta-panel kurta-qr-panel dandiya-payment-panel">
               <p className="eyebrow">STEP 02 · PAYMENT</p>
-              <h2>Choose how<br /><em>to pay.</em></h2>
+              <h2>Select payment<br /><em>method.</em></h2>
 
               <div className="dandiya-payment-options">
-                <label className={`dandiya-payment-option ${paymentMethod === "cash" ? "selected" : ""}`}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="cash"
-                    checked={paymentMethod === "cash"}
-                    onChange={(e) => { setPaymentMethod(e.target.value); setStatus(""); setError(""); }}
-                  />
-                  <div className="dandiya-payment-option-body">
-                    <span className="dandiya-radio-dot" aria-hidden="true">
-                      {paymentMethod === "cash" && <span />}
-                    </span>
-                    <span className="dandiya-payment-option-icon">₹</span>
-                    <div>
-                      <b>Cash at counter</b>
-                      <p>Pay cash at the collection counter. A QR code pass will be generated for counter collection.</p>
-                    </div>
-                  </div>
-                </label>
-
                 <label className={`dandiya-payment-option ${paymentMethod === "online" ? "selected" : ""}`}>
                   <input
                     type="radio"
@@ -442,8 +426,28 @@ export default function DandiyaDistributionForm() {
                     </span>
                     <span className="dandiya-payment-option-icon">📱</span>
                     <div>
-                      <b>Pay online via UPI</b>
-                      <p>Scan UPI QR Code using Google Pay, PhonePe, Paytm, Amazon Pay or pay via automated gateway.</p>
+                      <b>Pay online via UPI / GPay</b>
+                      <p>Scan official UPI QR Code or pay via instant online payment gateway.</p>
+                    </div>
+                  </div>
+                </label>
+
+                <label className={`dandiya-payment-option ${paymentMethod === "cash" ? "selected" : ""}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="cash"
+                    checked={paymentMethod === "cash"}
+                    onChange={(e) => { setPaymentMethod(e.target.value); setStatus(""); setError(""); }}
+                  />
+                  <div className="dandiya-payment-option-body">
+                    <span className="dandiya-radio-dot" aria-hidden="true">
+                      {paymentMethod === "cash" && <span />}
+                    </span>
+                    <span className="dandiya-payment-option-icon">₹</span>
+                    <div>
+                      <b>Pay cash at counter (Unpaid)</b>
+                      <p>Register request online and pay cash in-person at the collection counter.</p>
                     </div>
                   </div>
                 </label>
@@ -540,10 +544,10 @@ export default function DandiyaDistributionForm() {
                 {isSubmitting
                   ? verifyingStatus || "Processing..."
                   : paymentMethod === "online"
-                  ? `Pay ${formatAmount(totalAmount)} via Online Gateway`
+                  ? `Pay ${formatAmount(totalAmount)} via Gateway`
                   : paymentMethod === "cash"
-                  ? "Confirm cash payment"
-                  : "Select payment method"} <span>↗</span>
+                  ? "Register for Cash Payment"
+                  : "Select Payment Method"} <span>↗</span>
               </button>
             </div>
 
@@ -556,10 +560,12 @@ export default function DandiyaDistributionForm() {
         {step === 3 && completedPass && (
           <section className="dandiya-pass-confirmation">
             <div className="dandiya-pass-banner">
-              <span className="dandiya-pass-badge">✓ ORDER CONFIRMED</span>
+              <span className="dandiya-pass-badge">
+                {completedPass.orderDetails.paymentMethod === "online" ? "✓ PAYMENT VERIFIED" : "⚠️ REGISTRATION CONFIRMED (CASH PENDING)"}
+              </span>
               <h2>Thank You, <em>{completedPass.orderDetails.name}!</em></h2>
               <p>
-                We have generated your Dandiya Collection Pass. A thank-you email with your QR Code has been sent to <strong>{completedPass.orderDetails.email}</strong> and a WhatsApp message to <strong>{completedPass.orderDetails.phone}</strong>.
+                We have generated your Dandiya Collection Pass. Details have been sent to <strong>{completedPass.orderDetails.email}</strong> and WhatsApp <strong>{completedPass.orderDetails.phone}</strong>.
               </p>
             </div>
 
@@ -598,9 +604,9 @@ export default function DandiyaDistributionForm() {
                   <strong>{completedPass.orderDetails.quantity} Pair{completedPass.orderDetails.quantity !== 1 ? "s" : ""}</strong>
                 </div>
                 <div>
-                  <span>Deposit Amount</span>
-                  <strong className="saffron-text">
-                    {formatAmount(completedPass.orderDetails.totalAmount)} ({completedPass.orderDetails.paymentMethod === "online" ? "Paid & Verified Online via UPI" : "Cash at Counter"})
+                  <span>Deposit Status</span>
+                  <strong className={completedPass.orderDetails.paymentMethod === "online" ? "saffron-text" : "cash-pending-text"}>
+                    {formatAmount(completedPass.orderDetails.totalAmount)} ({completedPass.orderDetails.paymentMethod === "online" ? "Paid & Verified Online via UPI" : "Unpaid · Cash at Counter"})
                   </strong>
                 </div>
                 {completedPass.orderDetails.paymentReference && (
@@ -616,7 +622,7 @@ export default function DandiyaDistributionForm() {
                   <strong>Collection Steps:</strong><br />
                   1. Visit the Dandiya Collection Counter.<br />
                   2. Present this QR code or Pass Code <strong>({completedPass.pickupCode})</strong> to our team.<br />
-                  3. {completedPass.orderDetails.paymentMethod === "online" ? "Your payment is verified online. Collect your Dandiya pairs directly." : `Pay ${formatAmount(completedPass.orderDetails.totalAmount)} in cash to collect your Dandiya pairs.`}<br />
+                  3. {completedPass.orderDetails.paymentMethod === "online" ? "Your payment is verified online. Collect your Dandiya pairs directly." : `Pay ${formatAmount(completedPass.orderDetails.totalAmount)} in cash at the counter to collect your Dandiya pairs.`}<br />
                   4. Return the Dandiya sticks after the event to reclaim your full deposit in cash.
                 </p>
               </div>
