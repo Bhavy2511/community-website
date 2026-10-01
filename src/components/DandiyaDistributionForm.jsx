@@ -1,13 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 
 const depositPerPair = 50; // ₹50 per pair deposit
 const maxPairsPerOrder = 10;
-
-const UPI_ID = "gujaraticommunityiitg@upi";
-const UPI_NAME = "Gujarati Community IITG";
 
 function formatAmount(amount) {
   return `₹${amount.toLocaleString("en-IN")}`;
@@ -48,7 +44,6 @@ export default function DandiyaDistributionForm() {
   const [pendingOrderId, setPendingOrderId] = useState("");
   const [verifyingStatus, setVerifyingStatus] = useState("");
   const [pollCount, setPollCount] = useState(0);
-  const [copiedUpi, setCopiedUpi] = useState(false);
 
   const numericQuantity = typeof details.quantity === "number" ? details.quantity : parseInt(details.quantity, 10) || 1;
   const totalAmount = numericQuantity * depositPerPair;
@@ -94,7 +89,7 @@ export default function DandiyaDistributionForm() {
 
   function handlePaymentSubmit() {
     if (!paymentMethod) {
-      setError("Please select how you want to pay (Online UPI or Cash at counter).");
+      setError("Please select how you want to pay (Online Gateway or Cash at counter).");
       return;
     }
     setError("");
@@ -145,7 +140,7 @@ export default function DandiyaDistributionForm() {
     setIsSubmitting(true);
     setError("");
     setStatus("");
-    setVerifyingStatus("Creating pending order & initializing payment...");
+    setVerifyingStatus("Creating pending order & initializing payment gateway...");
 
     try {
       // 1. Create Pending Payment Order on Server
@@ -187,6 +182,10 @@ export default function DandiyaDistributionForm() {
             name: details.name.trim(),
             email: details.email.trim(),
             contact: details.phone.trim(),
+          },
+          notes: {
+            merchant_upi: "gujaraticommunityiitg@upi",
+            merchant_name: "Gujarati Community IITG",
           },
           theme: {
             color: "#d36d31",
@@ -313,12 +312,6 @@ export default function DandiyaDistributionForm() {
     }
 
     setError(reasonMessage || "❌ Payment was cancelled. Your Dandiya deposit request was not placed.");
-  }
-
-  function handleCopyUpi() {
-    navigator.clipboard.writeText(UPI_ID);
-    setCopiedUpi(true);
-    setTimeout(() => setCopiedUpi(false), 2500);
   }
 
   function resetForm() {
@@ -560,8 +553,8 @@ export default function DandiyaDistributionForm() {
                     </span>
                     <span className="dandiya-payment-option-icon">📱</span>
                     <div>
-                      <b>Pay online via UPI / GPay (Amazon-Style Automated)</b>
-                      <p>Google Pay, PhonePe, Paytm, Amazon Pay or scan official UPI QR Code. Bank auto-verifies.</p>
+                      <b>Pay online via Gateway (GPay / PhonePe / Paytm / Cards / UPI)</b>
+                      <p>Instant online checkout. Money goes directly to Gujarati Community IITG account. Bank auto-verifies.</p>
                     </div>
                   </div>
                 </label>
@@ -586,76 +579,6 @@ export default function DandiyaDistributionForm() {
                   </div>
                 </label>
               </div>
-
-              {/* UPI Payment QR Code & Details Card */}
-              {paymentMethod === "online" && (
-                <div className="dandiya-upi-card" style={{
-                  marginTop: "1.5rem",
-                  padding: "1.5rem",
-                  background: "#fffcf8",
-                  border: "1px dashed #d36d31",
-                  borderRadius: "12px",
-                  textAlign: "center"
-                }}>
-                  <p className="eyebrow" style={{ color: "#d36d31", marginBottom: ".4rem" }}>
-                    OFFICIAL UPI PAYMENT QR CODE
-                  </p>
-                  <p style={{ fontSize: "14px", color: "#193630", marginBottom: "1rem" }}>
-                    Scan with <strong>Google Pay / PhonePe / Paytm / BHIM / Amazon Pay</strong> to pay <strong>{formatAmount(totalAmount)}</strong>
-                  </p>
-
-                  <div className="dandiya-qr-image-wrapper" style={{
-                    display: "inline-block",
-                    padding: "12px",
-                    background: "#ffffff",
-                    borderRadius: "12px",
-                    boxShadow: "0 4px 14px rgba(0,0,0,0.08)",
-                    border: "1px solid #e2d9c8",
-                    marginBottom: "1rem"
-                  }}>
-                    <Image
-                      src="/dandiya-payment-qr/QR_Bhavy.jpeg"
-                      alt="UPI Payment QR Code"
-                      width={220}
-                      height={220}
-                      style={{ borderRadius: "8px", objectFit: "contain" }}
-                      priority
-                    />
-                  </div>
-
-                  <div className="dandiya-upi-id-box" style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    background: "#f8f3ea",
-                    padding: "10px 16px",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    color: "#193630",
-                    margin: "0 auto 1rem auto",
-                    maxWidth: "340px"
-                  }}>
-                    <span>UPI ID: <strong>{UPI_ID}</strong></span>
-                    <button
-                      type="button"
-                      onClick={handleCopyUpi}
-                      style={{
-                        background: "#d36d31",
-                        color: "#ffffff",
-                        border: "none",
-                        padding: "4px 10px",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                        fontWeight: "bold",
-                        cursor: "pointer"
-                      }}
-                    >
-                      {copiedUpi ? "✓ Copied!" : "Copy"}
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Actions */}
@@ -678,7 +601,7 @@ export default function DandiyaDistributionForm() {
                 {isSubmitting
                   ? verifyingStatus || "Processing..."
                   : paymentMethod === "online"
-                  ? `Pay ${formatAmount(totalAmount)} via Online Gateway`
+                  ? `Pay ${formatAmount(totalAmount)} via Gateway`
                   : paymentMethod === "cash"
                   ? "Register for Cash Payment"
                   : "Select Payment Method"} <span>↗</span>
