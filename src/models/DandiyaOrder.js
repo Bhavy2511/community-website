@@ -35,6 +35,10 @@ const DandiyaOrderSchema = new mongoose.Schema(
       default: "pending",
       index: true,
     },
+    paymentReference: { type: String, trim: true, default: "" },
+    razorpayOrderId: { type: String, trim: true, default: "" },
+    razorpayPaymentId: { type: String, trim: true, default: "" },
+    razorpaySignature: { type: String, trim: true, default: "" },
     pickupCode: { type: String, required: true, unique: true, index: true },
     pickupTokenHash: {
       type: String,
